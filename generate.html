@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ 
+    <title>Titre de la page</title>
+    <style>
+        *{
+            padding:0;
+            margin:0;
+        }
+      #values{
+          margin-left:30px;
+      }
+        .in{
+            width:100px;
+        }
+        /* style de la section  */
+        #board{
+            display:flex;
+            flex-direction:line; 
+            gap:30px;
+            
+        }
+    </style>
+</head>
+<body>
+    <header>
+        
+        <br><br><nav>
+        <a href="index.html" style="margin-left:5px;">Maison ⟩ </a>
+        <a href="histoire.html" style="margin-left:20px;">historique ⟩ </a>
+    </nav></header>
+    <main>
+        <br><br>
+        <h1>Insérez les valeurs</h1>
+        <p>Pour commencer</p>
+        <br><br><br>
+        <!-- section pour les entrées et explications -->
+        <section id="board">
+            <!--  -->
+        <section id="values">
+    <!--  pour les valeurs de y -->        
+    
+        
+        <form id="myForm">
+            <label>Valeurs de <em>Y</em></label>  
+        <br><br>
+        
+            <ol>
+            <li><input type="number" class="in" name="num1" required></li>
+            <br>
+            <li><input type="number" class="in" name="num2" required></li>
+            <br>
+            <li><input type="number" class="in" name="num3"></li>
+            <br>
+            <li><input type="number" class="in" name="num4"></li>
+           </ol> 
+        
+            <br><br>
+       
+            
+            <!--  pour les valeurs de y -->
+         
+                 <label>Valeurs de <em>X</em></label>
+                 <br><br> 
+           
+           <ol> 
+               <li><input type="text" class="in" name="tex1" required></li>
+            <br>
+           <li> <input type="text" class="in" name="tex2" required></li>
+            <br>
+            <li><input type="text" class="in" name="tex3"></li>
+            <br>
+            <li><input type="text" class="in" name="tex4"></li></ol>
+            <br><br>
+            <select id="mySelect">
+                <option value="option1">
+                   courbes
+                </option>
+                <option value="option2">
+                  barres
+                </option>
+            </select>
+            <br><br>
+           <input type="submit">
+            <br><br>
+        </form>
+        
+        
+        </section>
+        <!-- section d'explication -->
+        <section>
+            <br><br><br>
+       <p>
+           <em>Y</em> désigne les valeurs qui seront verticales <b>|</b>.
+       </p>
+       <br><br><br>  <br><br><br>  <br><br><br>
+       <p>
+           <em>X</em> désigne les valeurs horizontales <b>-</b>.
+       </p>     
+            
+        </section>
+            
+            
+        </section>
+        
+        
+        <br><br><br>
+        
+    <!-- où s'affiche le diagramme -->  
+    <section id="show">
+        <h2>Le diagramme s'affichera ici!</h2>
+        <br><br>
+          <canvas id="monGraphique" width="350" height="400"></canvas>  
+    </section>  
+        
+        
+        
+        
+     <br><br><br>   
+    </main>
+    <footer></footer>
+    
+    <!-- JavaScript -->
+ 
+<script>
+    // Récupérer le canvas et son contexte
+    const canvas = document.getElementById('monGraphique');
+    const ctx = canvas.getContext('2d');
+    
+    //pour la sélection
+    const select = document.getElementById('mySelect');        
+        
+    const form = document.getElementById("myForm");
+    const showIt = document.getElementById("show");     
+        
+    //la fonction qui récupèrent les données et crée le diagramme
+    form.addEventListener('submit', function(event) {
+        //empêche le rechargement du form
+        event.preventDefault();
+        
+        // Effacer le canvas avant de dessiner
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const formData = new FormData(form);  
+
+        //récupère les données de Y (avec gestion des valeurs vides)
+        const n1 = parseFloat(formData.get('num1')) || 0;
+        const n2 = parseFloat(formData.get('num2')) || 0;
+        const n3 = parseFloat(formData.get('num3')) || 0;
+        const n4 = parseFloat(formData.get('num4')) || 0;
+        
+        //récupère les données de X
+        const t1 = formData.get('tex1') || 'Label 1';
+        const t2 = formData.get('tex2') || 'Label 2';
+        const t3 = formData.get('tex3') || 'Label 3';
+        const t4 = formData.get('tex4') || 'Label 4';
+        
+        // Filtrer les données non nulles
+        const donneesBrutes = [n1, n2, n3, n4];
+        const labelsBruts = [t1, t2, t3, t4];
+        
+        // Ne garder que les données avec des valeurs Y non nulles
+        const donnees = [];
+        const labels = [];
+        for (let i = 0; i < donneesBrutes.length; i++) {
+            if (donneesBrutes[i] !== 0) {
+                donnees.push(donneesBrutes[i]);
+                labels.push(labelsBruts[i]);
+            }
+        }
+        
+        // Si aucune donnée, afficher un message
+        if (donnees.length === 0) {
+            ctx.fillStyle = '#ff0000';
+            ctx.font = '16px Arial';
+            ctx.fillText('Aucune donnée valide à afficher!', 50, 200);
+            return;
+        }
+        
+        const couleurs = ['#6a8dff', '#ffbfbf', '#fffc15', '#b0ff95'];
+        
+        // Récupérer la valeur sélectionnée CORRECTEMENT
+        const selectedValue = select.value;
+        
+        // Condition pour le type de graphique
+        if (selectedValue === 'option2') {
+            // Graphique à barres
+            const largeurBarre = 40;
+            const espaceBarre = 20;
+            const marge = 50;
+            const hauteurMax = canvas.height - marge * 2;
+            const valeurMax = Math.max(...donnees);
+            
+            // Dessiner les barres
+            for (let i = 0; i < donnees.length; i++) {
+                // Calculer la position et la hauteur
+                const x = marge + i * (largeurBarre + espaceBarre);
+                const hauteur = (donnees[i] / valeurMax) * hauteurMax;
+                const y = canvas.height - marge - hauteur;
+                
+                // Dessiner la barre
+                ctx.fillStyle = couleurs[i % couleurs.length];
+                ctx.fillRect(x, y, largeurBarre, hauteur);
+                
+                // Ajouter le label
+                ctx.fillStyle = '#333';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(labels[i], x + largeurBarre/2, canvas.height - marge + 20);
+                
+                // Ajouter la valeur
+                ctx.fillText(donnees[i], x + largeurBarre/2, y - 10);
+            }
+            
+            // Dessiner l'axe horizontal
+            ctx.beginPath();
+            ctx.moveTo(marge - 10, canvas.height - marge);
+            ctx.lineTo(canvas.width - marge + 10, canvas.height - marge);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Dessiner l'axe vertical
+            ctx.beginPath();
+            ctx.moveTo(marge - 10, canvas.height - marge);
+            ctx.lineTo(marge - 10, marge - 10);
+            ctx.stroke();
+            
+            // Ajouter un titre
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Graphique à barres', canvas.width/2, 30);
+            
+        } else if (selectedValue === 'option1') {
+            // Graphique en courbes (ligne)
+            const marge = 50;
+            const hauteurMax = canvas.height - marge * 2;
+            const largeurUtile = canvas.width - marge * 2;
+            const valeurMax = Math.max(...donnees);
+            
+            // Calculer les points
+            const points = [];
+            for (let i = 0; i < donnees.length; i++) {
+                const x = marge + (i / (donnees.length - 1)) * largeurUtile;
+                const y = canvas.height - marge - (donnees[i] / valeurMax) * hauteurMax;
+                points.push({x, y});
+            }
+            
+            // Dessiner la ligne
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.strokeStyle = '#6a8dff';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Dessiner les points
+            for (let i = 0; i < points.length; i++) {
+                ctx.beginPath();
+                ctx.arc(points[i].x, points[i].y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = couleurs[i % couleurs.length];
+                ctx.fill();
+                
+                // Ajouter les labels
+                ctx.fillStyle = '#333';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(labels[i], points[i].x, canvas.height - marge + 20);
+                ctx.fillText(donnees[i], points[i].x, points[i].y - 15);
+            }
+            
+            // Dessiner les axes
+            ctx.beginPath();
+            ctx.moveTo(marge - 10, canvas.height - marge);
+            ctx.lineTo(canvas.width - marge + 10, canvas.height - marge);
+            ctx.moveTo(marge - 10, canvas.height - marge);
+            ctx.lineTo(marge - 10, marge - 10);
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Ajouter un titre
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Graphique en courbes', canvas.width/2, 30);
+        }
+    });           
+    </script>
+</body>
+</html>
